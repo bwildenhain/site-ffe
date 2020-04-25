@@ -1,59 +1,56 @@
-From d1415b34313985d4d7de97811625f441635cc639 Mon Sep 17 00:00:00 2001
-From: Vincent Wiemann <vincent.wiemann@ironai.com>
-Date: Wed, 13 Mar 2019 19:44:16 +0100
-Subject: [PATCH] Reintroduce HT40
+From 9eca9ba1203949405ba83427dbc009a08086fc2d Mon Sep 17 00:00:00 2001
+From: Benedikt Wildenhain <benedikt.wildenhain@hs-bochum.de>
+Date: Sat, 25 Apr 2020 14:51:27 +0200
+Subject: [PATCH] Readds the site.conf options to set (V)HT mode.
 
-Adds the site.conf options to set the HT/VHT mode.
 ---
- package/gluon-core/check_site.lua                        | 6 ++++++
+ package/gluon-core/check_site.lua                        | 3 +++
  package/gluon-core/luasrc/lib/gluon/upgrade/200-wireless | 8 ++++----
- 2 files changed, 10 insertions(+), 4 deletions(-)
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/package/gluon-core/check_site.lua b/package/gluon-core/check_site.lua
-index ede64cd..49b1030 100644
+index 7a4cd060..8a38ecfc 100644
 --- a/package/gluon-core/check_site.lua
 +++ b/package/gluon-core/check_site.lua
-@@ -33,6 +33,7 @@ for _, config in ipairs({'wifi24', 'wifi5'}) do
- 		need_string(in_site({'regdom'})) -- regdom is only required when wifi24 or wifi5 is configured
+@@ -45,8 +45,11 @@ for _, config in ipairs({'wifi24', 'wifi5'}) do
+ 			need_one_of({config, 'channel'}, channels)
+ 			need_chanlist({config, 'outdoor_chanlist'}, channels, false)
+ 			need_one_of({config, 'outdoors'}, {true, false, 'preset'}, false)
++			need_string({'wifi5', 'vhtmode'})
+ 		end
  
- 		need_number({config, 'channel'})
 +		need_string({config, 'htmode'})
- 
- 		local rates = {1000, 2000, 5500, 6000, 9000, 11000, 12000, 18000, 24000, 36000, 48000, 54000}
- 		local supported_rates = need_array_of(in_site({config, 'supported_rates'}), rates, false)
-@@ -54,6 +55,11 @@ for _, config in ipairs({'wifi24', 'wifi5'}) do
- 	end
- end
- 
-+if need_table({'wifi5'}, nil, false) then
-+	need_string({'wifi5', 'vhtmode'})
-+end
 +
-+
- need_boolean(in_site({'poe_passthrough'}), false)
- 
- if need_table({'dns'}, nil, false) then
+ 		obsolete({config, 'supported_rates'}, '802.11b rates are disabled by default.')
+ 		obsolete({config, 'basic_rate'}, '802.11b rates are disabled by default.')
+ 		obsolete({config, 'ibss'}, 'IBSS support has been dropped.')
 diff --git a/package/gluon-core/luasrc/lib/gluon/upgrade/200-wireless b/package/gluon-core/luasrc/lib/gluon/upgrade/200-wireless
-index e4c252b..82a49ea 100755
+index 709cc909..763625a3 100755
 --- a/package/gluon-core/luasrc/lib/gluon/upgrade/200-wireless
 +++ b/package/gluon-core/luasrc/lib/gluon/upgrade/200-wireless
-@@ -58,12 +58,12 @@ local function get_channel(radio, config)
+@@ -64,7 +64,7 @@ local function get_channel(radio, config)
  	return channel or config.channel()
  end
  
 -local function get_htmode(radio)
 +local function get_htmode(radio, config)
-        local phy = util.find_phy(radio)
-        if iwinfo.nl80211.hwmodelist(phy).ac then
--               return 'VHT20'
-+               return config.vhtmode()
-        else
--               return 'HT20'
-+               return config.htmode()
-        end
+ 	if (radio.hwmode == '11a' or radio.hwmode == '11na') and is_outdoor() then
+ 		local outdoor_htmode = uci:get('gluon', 'wireless', 'outdoor_' .. radio['.name'] .. '_htmode')
+ 		if outdoor_htmode ~= nil then
+@@ -74,10 +74,10 @@ local function get_htmode(radio)
+ 
+ 	local phy = util.find_phy(radio)
+ 	if iwinfo.nl80211.hwmodelist(phy).ac then
+-		return 'VHT20'
++		return config.vhtmode()
+ 	end
+ 
+-	return 'HT20'
++	return config.htmode()
  end
  
-@@ -199,7 +199,7 @@ util.foreach_radio(uci, function(radio, index, config)
+ local function is_disabled(name)
+@@ -189,7 +189,7 @@ util.foreach_radio(uci, function(radio, index, config)
  	end
  
  	local channel = get_channel(radio, config)
@@ -63,5 +60,5 @@ index e4c252b..82a49ea 100755
  	uci:delete('wireless', radio_name, 'disabled')
  
 -- 
-2.1.4
+2.20.1
 
