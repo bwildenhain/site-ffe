@@ -1,6 +1,6 @@
-From 9eca9ba1203949405ba83427dbc009a08086fc2d Mon Sep 17 00:00:00 2001
+From 379f8f5e12ea17ae1d45ce6ea0517d069e5825e1 Mon Sep 17 00:00:00 2001
 From: Benedikt Wildenhain <benedikt.wildenhain@hs-bochum.de>
-Date: Sat, 25 Apr 2020 14:51:27 +0200
+Date: Sat, 25 Apr 2020 17:32:45 +0200
 Subject: [PATCH] Readds the site.conf options to set (V)HT mode.
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH] Readds the site.conf options to set (V)HT mode.
  2 files changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/package/gluon-core/check_site.lua b/package/gluon-core/check_site.lua
-index 7a4cd060..8a38ecfc 100644
+index f953d8a1..056fd722 100644
 --- a/package/gluon-core/check_site.lua
 +++ b/package/gluon-core/check_site.lua
 @@ -45,8 +45,11 @@ for _, config in ipairs({'wifi24', 'wifi5'}) do
@@ -23,9 +23,9 @@ index 7a4cd060..8a38ecfc 100644
 +
  		obsolete({config, 'supported_rates'}, '802.11b rates are disabled by default.')
  		obsolete({config, 'basic_rate'}, '802.11b rates are disabled by default.')
- 		obsolete({config, 'ibss'}, 'IBSS support has been dropped.')
+ 
 diff --git a/package/gluon-core/luasrc/lib/gluon/upgrade/200-wireless b/package/gluon-core/luasrc/lib/gluon/upgrade/200-wireless
-index 709cc909..763625a3 100755
+index eb120404..b27418c8 100755
 --- a/package/gluon-core/luasrc/lib/gluon/upgrade/200-wireless
 +++ b/package/gluon-core/luasrc/lib/gluon/upgrade/200-wireless
 @@ -64,7 +64,7 @@ local function get_channel(radio, config)
@@ -50,7 +50,7 @@ index 709cc909..763625a3 100755
  end
  
  local function is_disabled(name)
-@@ -189,7 +189,7 @@ util.foreach_radio(uci, function(radio, index, config)
+@@ -235,7 +235,7 @@ util.foreach_radio(uci, function(radio, index, config)
  	end
  
  	local channel = get_channel(radio, config)
